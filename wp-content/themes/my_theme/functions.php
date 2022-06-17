@@ -2,6 +2,7 @@
 
 add_action('woocommerce_product_options_general_product_data', 'art_woo_add_custom_fields');
 add_action('woocommerce_process_product_meta', 'art_woo_custom_fields_save', 10);
+add_action('woocommerce_before_add_to_cart_form', 'art_get_text_field_before_add_card');
 
 function art_woo_add_custom_fields()
 {
@@ -55,7 +56,6 @@ function art_woo_custom_fields_save($post_id)
     }
 }
 
-add_action('woocommerce_before_add_to_cart_form', 'art_get_text_field_before_add_card');
 function art_get_text_field_before_add_card()
 {
     $product = wc_get_product();
@@ -88,10 +88,10 @@ function art_get_text_field_before_add_card()
 add_action('rest_api_init', function () {
     register_rest_route('my_theme/v3', 'products/', array(
         'methods' => 'GET',
-        'callback' => 'get_latest_posts_by_category'
+        'callback' => 'get_products_list'
     ));
 });
-function get_latest_posts_by_category()
+function get_products_list()
 {
 
     $args = array(
@@ -99,6 +99,10 @@ function get_latest_posts_by_category()
     );
 
     $posts = get_posts($args);
+
+    if (empty($posts)) {
+        return new WP_Error('empty_products', 'There are no products to display', array('status' => 404));
+    }
 
     foreach ($posts as $k => $post) {
         $sku = get_post_meta($post->ID, '_sku', true);
@@ -116,11 +120,6 @@ function get_latest_posts_by_category()
         $result[$k]->synonyms = $synonyms;
         $result[$k]->note = $note;
     }
-//    var_dump($result);
-    if (empty($posts)) {
-        return new WP_Error('empty_category', 'There are no posts to display', array('status' => 404));
-
-    }
 
     $response = new WP_REST_Response($result);
     $response->set_status(200);
@@ -134,7 +133,7 @@ add_action('rest_api_init', function () {
     );
 
     register_rest_route('my_theme/v3', 'edit_product/', array(
-        'methods' => 'POST',
+        'methods' => 'PUT',
         'callback' => 'edit_product',
         'headers'   => $wp_request_headers
     ));
