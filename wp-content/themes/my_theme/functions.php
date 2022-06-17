@@ -129,24 +129,31 @@ function get_latest_posts_by_category()
 }
 
 add_action('rest_api_init', function () {
+    $wp_request_headers = array(
+        'Authorization' => 'Basic ' . base64_encode( 'username:password' )
+    );
+
     register_rest_route('my_theme/v3', 'edit_product/', array(
-        'methods' => 'PUT',
-        'auth' => 'ck_2fe6a9659968af7c29e1635607fcb57a87ea6884',
-        'callback' => 'add_product'
+        'methods' => 'POST',
+        'callback' => 'edit_product',
+        'headers'   => $wp_request_headers
     ));
 });
 add_action('rest_api_init', function () {
+    $wp_request_headers = array(
+        'Authorization' => 'Basic ' . base64_encode( 'username:password' )
+    );
+
     register_rest_route('my_theme/v3', 'add_product/', array(
         'methods' => 'POST',
-        'auth' => 'ck_2fe6a9659968af7c29e1635607fcb57a87ea6884',
-        'callback' => 'add_product'
+        'callback' => 'add_product',
+        'headers'   => $wp_request_headers
     ));
+
 });
 function add_product($request)
 {
     $post_id = wc_get_product_id_by_sku($request['sku']);
-    var_dump($post_id);
-    die();
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $my_post = array(
             'post_title' => wp_strip_all_tags($request['title']),
