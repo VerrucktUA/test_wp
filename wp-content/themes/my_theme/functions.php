@@ -99,14 +99,16 @@ function get_latest_posts_by_category()
     );
 
     $posts = get_posts($args);
+
     foreach ($posts as $k => $post) {
+        $sku = get_post_meta($post->ID, '_sku', true);
         $price = get_post_meta($post->ID, '_regular_price', true);
         $sale_price = get_post_meta($post->ID, '_price', true);
         $days = get_post_meta($post->ID, '_number_days', true);
         $synonyms = get_post_meta($post->ID, '_text_synonyms', true);
         $note = get_post_meta($post->ID, '_text_note', true);
 
-        $result[$k]->ID = $post->ID;
+        $result[$k]->sku = $sku;
         $result[$k]->title = $post->post_title;
         $result[$k]->price = $price;
         $result[$k]->sale_price = $sale_price;
@@ -129,18 +131,22 @@ function get_latest_posts_by_category()
 add_action('rest_api_init', function () {
     register_rest_route('my_theme/v3', 'edit_product/', array(
         'methods' => 'PUT',
+        'auth' => 'ck_2fe6a9659968af7c29e1635607fcb57a87ea6884',
         'callback' => 'add_product'
     ));
 });
 add_action('rest_api_init', function () {
     register_rest_route('my_theme/v3', 'add_product/', array(
         'methods' => 'POST',
+        'auth' => 'ck_2fe6a9659968af7c29e1635607fcb57a87ea6884',
         'callback' => 'add_product'
     ));
 });
 function add_product($request)
 {
-    var_dump($_SERVER['REQUEST_METHOD']);
+    $post_id = wc_get_product_id_by_sku($request['sku']);
+    var_dump($post_id);
+    die();
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $my_post = array(
             'post_title' => wp_strip_all_tags($request['title']),
@@ -150,7 +156,7 @@ function add_product($request)
         $postId = wp_insert_post($my_post);
     } else {
         $my_post = array(
-            'ID' => wp_strip_all_tags($request['ID']),
+            'ID' => $post_id,
             'post_title' => wp_strip_all_tags($request['title']),
             'post_author' => 1,
             'post_status' => 'publish',
@@ -158,6 +164,7 @@ function add_product($request)
         $postId = wp_insert_post($my_post);
 
     }
+    update_post_meta($postId, '_sku', $request['sku']);
     update_post_meta($postId, '_regular_price', $request['price']);
     update_post_meta($postId, '_price', $request['_price']);
     update_post_meta($postId, '_number_days', $request['days']);
