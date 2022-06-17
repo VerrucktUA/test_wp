@@ -55,6 +55,36 @@ function art_woo_custom_fields_save($post_id)
     }
 }
 
+add_action('woocommerce_before_add_to_cart_form', 'art_get_text_field_before_add_card');
+function art_get_text_field_before_add_card()
+{
+    $product = wc_get_product();
+    $_number_days = $product->get_meta('_number_days', true);
+    $_text_synonyms = $product->get_meta('_text_synonyms', true);
+    $_text_note = $product->get_meta('_text_note', true);
+
+    if ($_number_days) :
+        ?>
+        <div class="text-field">
+            <strong>Дни: </strong>
+            <?php echo $_number_days; ?>
+        </div>
+    <?php endif;
+    if ($_text_synonyms) : ?>
+        <div class="number-field">
+            <strong>Синонимы: </strong>
+            <?php echo $_text_synonyms; ?>
+        </div>
+    <?php endif;
+    if ($_text_note) : ?>
+        <div class="textarea-field">
+            <strong>Описание: </strong>
+            <?php echo $_text_note; ?>
+        </div>
+    <?php
+    endif;
+}
+
 add_action('rest_api_init', function () {
     register_rest_route('my_theme/v3', 'products/', array(
         'methods' => 'GET',
@@ -97,7 +127,7 @@ function get_latest_posts_by_category()
 }
 
 add_action('rest_api_init', function () {
-    register_rest_route('my_theme/v3', 'edit_product/(?P<id>\d+)', array(
+    register_rest_route('my_theme/v3', 'edit_product/', array(
         'methods' => 'PUT',
         'callback' => 'add_product'
     ));
@@ -110,46 +140,27 @@ add_action('rest_api_init', function () {
 });
 function add_product($request)
 {
-    var_dump($request['title']);
     var_dump($_SERVER['REQUEST_METHOD']);
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $my_post = array(
-            'post_title'    => wp_strip_all_tags( $request['title'] ),
-            'post_author'   => 1,
-            'post_status'  => 'publish',
+            'post_title' => wp_strip_all_tags($request['title']),
+            'post_author' => 1,
+            'post_status' => 'publish',
         );
-
-        wp_insert_post( $my_post );
-    }
-    else {
-//        $wpdb->update(
-//            $table,
-//            array('count' => $count),
-//            array('post_id' => $postID),
-//            array('%d'),
-//            array('%d'));
-    }
-
-//    if ($)
-    $result = $wpdb->get_results("SELECT * FROM $table WHERE post_id = $request->ID");
-    foreach ($result as $c) {
-        $count = $c->count;
-    }
-    var_dump($count);
-    /*if (!isset($count)) {
-        $count = 1;
-        $wpdb->insert($table,
-            array('post_id' => $postID, 'count' => $count),
-            array('%d', '%d')
-        );
+        $postId = wp_insert_post($my_post);
     } else {
-        $count = $count + 1;
-        $wpdb->update(
-            $table,
-            array('count' => $count),
-            array('post_id' => $postID),
-            array('%d'),
-            array('%d'));
-    }*/
-//    var_dump($count);
+        $my_post = array(
+            'ID' => wp_strip_all_tags($request['ID']),
+            'post_title' => wp_strip_all_tags($request['title']),
+            'post_author' => 1,
+            'post_status' => 'publish',
+        );
+        $postId = wp_insert_post($my_post);
+
+    }
+    update_post_meta($postId, '_regular_price', $request['price']);
+    update_post_meta($postId, '_price', $request['_price']);
+    update_post_meta($postId, '_number_days', $request['days']);
+    update_post_meta($postId, '_text_synonyms', $request['synonyms']);
+    update_post_meta($postId, '_text_note', $request['note']);
 }
