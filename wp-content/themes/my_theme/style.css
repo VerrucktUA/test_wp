@@ -1,0 +1,10 @@
+/*
+Theme Name:     storefront Child
+Theme URI:      http: //example.com/
+Description:    Дочерняя тема для темы Twenty Ten
+Author:         Ваше имя
+Author URI:     http: //example.com/about/
+Template:       storefront
+Version:        0.1
+*/
+@import url("../storefront/style.scss");
