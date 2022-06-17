@@ -90,6 +90,19 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'get_products_list'
     ));
+    $wp_request_headers = array(
+        'Authorization' => 'Basic ' . base64_encode( 'username:password' )
+    );
+    register_rest_route('my_theme/v3', 'edit_product/', array(
+        'methods' => 'PUT',
+        'callback' => 'edit_product',
+        'headers'   => $wp_request_headers
+    ));
+    register_rest_route('my_theme/v3', 'add_product/', array(
+        'methods' => 'POST',
+        'callback' => 'add_product',
+        'headers'   => $wp_request_headers
+    ));
 });
 function get_products_list()
 {
@@ -127,29 +140,6 @@ function get_products_list()
     return $response;
 }
 
-add_action('rest_api_init', function () {
-    $wp_request_headers = array(
-        'Authorization' => 'Basic ' . base64_encode( 'username:password' )
-    );
-
-    register_rest_route('my_theme/v3', 'edit_product/', array(
-        'methods' => 'PUT',
-        'callback' => 'edit_product',
-        'headers'   => $wp_request_headers
-    ));
-});
-add_action('rest_api_init', function () {
-    $wp_request_headers = array(
-        'Authorization' => 'Basic ' . base64_encode( 'username:password' )
-    );
-
-    register_rest_route('my_theme/v3', 'add_product/', array(
-        'methods' => 'POST',
-        'callback' => 'add_product',
-        'headers'   => $wp_request_headers
-    ));
-
-});
 function add_product($request)
 {
     $post_id = wc_get_product_id_by_sku($request['sku']);
